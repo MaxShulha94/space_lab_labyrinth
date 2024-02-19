@@ -3,89 +3,120 @@ import json
 import random
 
 
-from const import ATTEMPTS
-from gameplay import game_loop
-from text_generators import attack_info_input
+from const import DIRECTIONS_LIST, DIRECTIONS
+
+
+from text_generators import move_info_input
 
 
 class Labyrinth:
-    def __init__(self, labyrinth_map: dict = None):
-        self.labyrinth_map = labyrinth_map or {}
-
-    def generate_labyrinth(self) -> dict:
-        # Генерирует лабиринт из файла 'labyrinth.json'
+    def __init__(self, labyrinth: dict = None):
         with open('labyrinth_map.json', 'r') as json_file:
-            data = json.load(json_file)
-            self.labyrinth_map.update(data)
-        return self.labyrinth_map
+            self.labyrinth = json.load(json_file)
+
+
 
     def make_fire(self):
         # Генерирует в 5-ти случайных ячейках пламя
         fire_counter = 0
         while fire_counter < 4:
-            random_key = random.choice(list(self.labyrinth_map.keys()))
-            current_cell = self.labyrinth_map[random_key]
-            if current_cell.get('special') is None:
-                current_cell['objects'] = {'fire': 1}
-                fire_counter += 1
-
-        return self.labyrinth_map
-
-    def remove_fire(self):
-        # Удаляет пламя из ячеек в конце круга
-        for key, cell in self.labyrinth_map.items():
-            if cell['objects'] == {'fire': 1}:
-                del cell['objects']
-
-        return self.labyrinth_map
-
-class Cell:
-    def __init__(self, labyrinth: Labyrinth, players: dict = None):
-        self.labyrinth = labyrinth.labyrinth_map
-        self.players = players or {}
-
-
-    def add_player_location(self):
-        # Добавляет игрока в ячейку лабиринта и удаляет его, после того как игрок переходит на другую ячейку
-        for player in cell_instance.players.values():
-            cell_key = f'x{player.location[0]}_y{player.location[1]}'
-            if cell_key in cell_instance.labyrinth:
-                for _ in cell_instance.labyrinth.values():
-                    if player.name in _ and player.location[0] != _['x'] and player.location[1] == _['y']:
-                        del _[player.name]
-                    elif player.location[0] == _['x'] and player.location[1] == _['y']:
-                        if cell_instance.labyrinth[cell_key]:
-                            labyrinth_instance.labyrinth_map[cell_key][player.name] = {
-                                'name': player.name,
-                                'location': player.location,
-                                'health': player.health,
-                                'items': player.items,
-                                'active': player.active,
-                            }
+            random_key = random.choice(list(self.labyrinth.keys()))
+            current_cell = self.labyrinth[random_key]
+            if current_cell.get('objects') is not None:
+                continue
+            current_cell['objects'] = {'fire': 1}
+            fire_counter += 1
 
         return self.labyrinth
 
+    def remove_fire(self):
+        # Удаляет пламя из ячеек в конце круга
+        for key, cell in self.labyrinth.items():
+            if cell['objects'] == {'fire': 1}:
+                del cell['objects']
+
+        return self.labyrinth
+
+
 class Player:
     def __init__(self, name: str = '', x: int = 0, y: int = 0, active: bool = False,
-                 health: int = 5, items: dict = None, players: dict = None):
+                 health: int = 5, items: dict = None):
         self.name = name
         self.active = active
         self.location = [x, y]
         self.health = health
-        self.items = items
-        self.players = players or {}
+        self.items = {}
 
-    def add_player(self):
-        # Добавляет игроков в игру
-        quantity = input('How many players? ')
-        if quantity.isdigit():
-            quantity = int(quantity)
-            for _ in range(quantity):
-                name = input('Enter your name: ')
-                self.players[name] = Player(name=name)
-        else:
-            print('Invalid! Enter correct number of players')
-        return self.players
+
+
+    def work_with_objects(self, labyrinth, players_list):
+
+        for _ in labyrinth.labyrinth.items():
+
+
+            if self.location[0] == _[1]['x'] and self.location[1] == _[1]['y'] and _[1]['objects'] is not None:
+
+                if _[1]['objects'] == {'fire': 1}:
+                    self.health -= 1
+                    print(f'{self.name} gets in fire, {self.health} points left.')
+
+                if _[1]['objects'] == {"heart": 1}:
+                    self.health = 5
+                    print(f'{self.name} feels better! Health is {self.health}.')
+
+                if _[1]['objects'] == {"key": 1}:
+                    self.items.update({"key": 1})
+                    _[1]['objects'].pop('key')
+                    print(f'{self.name} got key! {self.items}')
+
+                if _[1]['objects'] == {"Golem": 1}:
+                    if self.items == {"key": 1}:
+                        print(f'***** {self.name} wins this game! Congratulations! *****')
+                    else:
+                        print(f'{self.name} was killed by Golem!')
+                        players_list = [p for p in players_list if p != self.player]
+
+
+
+
+
+
+
+    def move(self, labyrinth):
+        cell_location = [[labyrinth.labyrinth[cell]['x'], labyrinth.labyrinth[cell]['y']] for cell in labyrinth.labyrinth]
+        attempts = 3
+        while attempts != 0:
+            move_direction = move_info_input(attempts, self.name)
+
+
+            if move_direction not in DIRECTIONS_LIST:
+                attempts -= 1
+                print(f"Wrong input! {attempts} attempts left.")
+
+
+            if move_direction in DIRECTIONS_LIST:
+                dx, dy = DIRECTIONS[move_direction]
+                self.location[0] += dx
+                self.location[1] += dy
+
+                for cell in cell_location:
+                    if self.location[0] == cell[0] and self.location[1] == cell[1]:
+                        print(f"Moved {move_direction} to {self.location}")
+                        return
+
+                else:
+                    dx, dy = DIRECTIONS[move_direction]
+                    self.location[0] -= dx
+                    self.location[1] -= dy
+                    self.health -= 1
+
+                print(
+                    f"Wrong vector! {self.name} get 1 damage, {self.health} points left. Current location: {self.location}")
+                return
+        if attempts == 0:
+            print("Too many wrong inputs. Next player to make " "action.")
+            return
+
 
 
     def attack_player(self, target_player):
@@ -96,26 +127,5 @@ class Player:
 
 
 
-
-    def move(self):
-        if len(cell_instance.players.keys()) > 1:
-            for player in cell_instance.players.values():
-                target_player = player
-                print(f'{target_player}')
-
-
-
-
-
-
-
-
-class Try:
-    num = 0
-
-    def __init__(self, total_tries):
-        self.num = total_tries
-
-    def decrease_try_number(self, num=1):
-        self.num = self.num - num
-
+        # print(f'{player.name} was removed from game!')
+        # print(f'len after={len(players_list)}')

@@ -9,9 +9,12 @@ RIGHT to move right
 ''')
 
 
-def attack_info_input(other_players):
+def attack_info_input(player, other_players):
+    neighbours = [other_player for other_player in other_players if other_player.location == player.location ]
+
+    players_list_string = ", ".join([player.name for player in neighbours])
     return input(f'''
-You can hit {other_players} for 1 damage and finish your move, or skip hit and move to another cell.
+You can hit {players_list_string} for 1 damage and finish your move, or skip hit and move to another cell.
 If you want to hit player - enter player`s name.
 If you want to move - enter MOVE.
 ''')

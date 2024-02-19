@@ -1,18 +1,15 @@
-from game_elements import Labyrinth, Player, Cell
-from gameplay import game_loop
+from game_elements import Labyrinth, Player
+from gameplay import add_player, game_loop
 
 if __name__ == '__main__':
+    list_of_players = add_player()
+
     labyrinth_instance = Labyrinth()
-    labyrinth_instance.generate_labyrinth()
-
+    labyrinth_instance.make_fire()
     player_instance = Player()
-    players_dict = player_instance.add_player()
 
 
-    cell_instance = Cell(labyrinth=labyrinth_instance, players=players_dict)
-    game_loop(cell_instance)
-
-
+    game_loop(labyrinth_instance, list_of_players)
 
 
 
