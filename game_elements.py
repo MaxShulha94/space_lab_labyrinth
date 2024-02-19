@@ -8,7 +8,7 @@ from text_generators import move_info_input
 
 
 class Labyrinth:
-    def __init__(self, labyrinth: dict = None):
+    def __init__(self):
         with open('labyrinth_map.json', 'r') as json_file:
             self.labyrinth = json.load(json_file)
 
@@ -65,23 +65,17 @@ class Player:
                     if self.items == {"key": 1}:
                         print(f'***** {self.name} wins this game! Congratulations! *****')
                     else:
+
                         print(f'{self.name} was killed by Golem!')
-                        players_list = [p for p in players_list if p != self.player]
+                        self.remove_player(players_list)
 
+    def remove_player(self, list_of_players: list):
+        for player in list_of_players:
+            if self.name == player.name:
+                list_of_players.remove(player)
 
-    # def move_back(self, labyrinth):
-    #     for index, value in enumerate(labyrinth.labyrinth.items()):
-    #         player_location = (self.location[0], self.location[1])
-    #         if player_location[0] == value[1]['x'] and player_location[1] == value[1]['y']:
-    #             print(index,'assssss')
-    #
-    #         print(value[1]['x'], value[1]['y'], value[1]['objects'], index, )
-
-
-
-
-    def move(self, labyrinth):
-        prev_location = (self.location[0], self.location[1])
+    def move(self, labyrinth, players_list):
+        prev_location = [self.location[0], self.location[1]]
         cell_location = [[labyrinth.labyrinth[cell]['x'], labyrinth.labyrinth[cell]['y']] for cell in
                          labyrinth.labyrinth]
         attempts = 3
@@ -96,34 +90,47 @@ class Player:
                 dx, dy = DIRECTIONS[move_direction]
                 self.location[0] += dx
                 self.location[1] += dy
+                new_location = [self.location[0], self.location[1]]
 
-                for index, value in enumerate(labyrinth.labyrinth.items()):
-                    player_location = (self.location[0], self.location[1])
-                    if player_location[0] == value[1]['x'] and player_location[1] == value[1]['y'] and value[1]['objects'] is not {'heart': 1} and not {'key': 1}:
-                        print(f'{self.name} tried to run away! Game over, you loose!')
+                # for index, value in enumerate(labyrinth.labyrinth.items()):
+                #     if value[1]['x'] == prev_location[0] and value[1]['y'] == prev_location[1]:
+                #         prev_location_index = index
+                #
+                #     if value[1]['x'] == new_location[0] and value[1]['y'] == new_location[1]:
+                #         new_location_index = index
+                prev_location_index = next(index for index, value in enumerate(labyrinth.labyrinth.items()) if
+                                           value[1]['x'] == prev_location[0] and value[1]['y'] == prev_location[1])
 
+                new_location_index = next(index for index, value in enumerate(labyrinth.labyrinth.items()) if
+                                          value[1]['x'] == new_location[0] and value[1]['y'] == new_location[1])
+                for value in labyrinth.labyrinth.items():
+                    if value[1]['x'] == prev_location[0] and value[1]['y'] == prev_location[1]:
+                        if prev_location_index > new_location_index and len(value[1]) == 3:
+                            print(f'Person tried to run. {self.name}, game over!')
+                            self.remove_player(players_list)
+                            return
 
-                for cell in cell_location:
-                    if self.location[0] == cell[0] and self.location[1] == cell[1]:
-                        print(f"Moved {move_direction} to {self.location}")
+                        elif (prev_location_index < new_location_index) or (
+                                prev_location_index > new_location_index) and (
+                                value[1]['special'] is True):
+                            for cell in cell_location:
+                                if self.location[0] == cell[0] and self.location[1] == cell[1]:
+                                    print(f"Moved {move_direction} to {self.location}")
+                                    return
+
+                            else:
+                                dx, dy = DIRECTIONS[move_direction]
+                                self.location[0] -= dx
+                                self.location[1] -= dy
+                                self.health -= 1
+                            print(
+                                f"Wrong vector! {self.name} get 1 damage, {self.health} points left. Current location: {self.location}")
+                            return
+
+                    if attempts == 0:
+                        print("Too many wrong inputs. Next player to make " "action.")
                         return
-
-                else:
-                    dx, dy = DIRECTIONS[move_direction]
-                    self.location[0] -= dx
-                    self.location[1] -= dy
-                    self.health -= 1
-
-                print(
-                    f"Wrong vector! {self.name} get 1 damage, {self.health} points left. Current location: {self.location}")
-                return
-        if attempts == 0:
-            print("Too many wrong inputs. Next player to make " "action.")
-            return
 
     def attack_player(self, target_player):
         target_player.health -= 1
         return f'{target_player.name} lost 1 health point. {target_player.health} health points left'
-
-        # print(f'{player.name} was removed from game!')
-        # print(f'len after={len(players_list)}')

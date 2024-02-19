@@ -9,7 +9,7 @@ RIGHT to move right
 ''')
 
 
-def attack_info_input(player, neighbours):
+def attack_info_input(neighbours):
 
 
     players_list_string = ", ".join([player.name for player in neighbours])

@@ -27,13 +27,11 @@ def players_turn(player, labyrinth, list_of_players, attempts=3):
         other_players = [other_player for other_player in list_of_players if other_player.name != player.name]
         neighbours = [other_player for other_player in other_players if other_player.location == player.location]
         if neighbours:
-
-            users_input = attack_info_input(player, neighbours)
-
+            users_input = attack_info_input(neighbours)
             if users_input == "MOVE":
-                player.move(labyrinth)
+                player.move(labyrinth, list_of_players)
+                player.work_with_objects(labyrinth, list_of_players)
                 return
-
 
             for neighbour in neighbours:
                 if users_input == neighbour.name:
@@ -42,13 +40,14 @@ def players_turn(player, labyrinth, list_of_players, attempts=3):
                     player.attack_player(target_player)
                     print(f'{player.name} damaged {target_player.name}, {target_player.health} health points left')
                     return
-                else:
-                    player.move(labyrinth)
-                    return
+                # else:
+                #     player.move(labyrinth, list_of_players)
+                #     return
             print(f"Wrong input, try again. {attempts} tries left!")
             attempts -= 1
         else:
-            player.move(labyrinth)
+            player.move(labyrinth, list_of_players)
+            player.work_with_objects(labyrinth, list_of_players)
             return
     print("You did nothing, try next time!")
 
