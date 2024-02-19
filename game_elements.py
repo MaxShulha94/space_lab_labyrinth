@@ -2,9 +2,7 @@ import json
 
 import random
 
-
 from const import DIRECTIONS_LIST, DIRECTIONS
-
 
 from text_generators import move_info_input
 
@@ -13,8 +11,6 @@ class Labyrinth:
     def __init__(self, labyrinth: dict = None):
         with open('labyrinth_map.json', 'r') as json_file:
             self.labyrinth = json.load(json_file)
-
-
 
     def make_fire(self):
         # Генерирует в 5-ти случайных ячейках пламя
@@ -47,13 +43,9 @@ class Player:
         self.health = health
         self.items = {}
 
-
-
     def work_with_objects(self, labyrinth, players_list):
 
         for _ in labyrinth.labyrinth.items():
-
-
             if self.location[0] == _[1]['x'] and self.location[1] == _[1]['y'] and _[1]['objects'] is not None:
 
                 if _[1]['objects'] == {'fire': 1}:
@@ -77,27 +69,39 @@ class Player:
                         players_list = [p for p in players_list if p != self.player]
 
 
-
+    # def move_back(self, labyrinth):
+    #     for index, value in enumerate(labyrinth.labyrinth.items()):
+    #         player_location = (self.location[0], self.location[1])
+    #         if player_location[0] == value[1]['x'] and player_location[1] == value[1]['y']:
+    #             print(index,'assssss')
+    #
+    #         print(value[1]['x'], value[1]['y'], value[1]['objects'], index, )
 
 
 
 
     def move(self, labyrinth):
-        cell_location = [[labyrinth.labyrinth[cell]['x'], labyrinth.labyrinth[cell]['y']] for cell in labyrinth.labyrinth]
+        prev_location = (self.location[0], self.location[1])
+        cell_location = [[labyrinth.labyrinth[cell]['x'], labyrinth.labyrinth[cell]['y']] for cell in
+                         labyrinth.labyrinth]
         attempts = 3
         while attempts != 0:
             move_direction = move_info_input(attempts, self.name)
-
 
             if move_direction not in DIRECTIONS_LIST:
                 attempts -= 1
                 print(f"Wrong input! {attempts} attempts left.")
 
-
             if move_direction in DIRECTIONS_LIST:
                 dx, dy = DIRECTIONS[move_direction]
                 self.location[0] += dx
                 self.location[1] += dy
+
+                for index, value in enumerate(labyrinth.labyrinth.items()):
+                    player_location = (self.location[0], self.location[1])
+                    if player_location[0] == value[1]['x'] and player_location[1] == value[1]['y'] and value[1]['objects'] is not {'heart': 1} and not {'key': 1}:
+                        print(f'{self.name} tried to run away! Game over, you loose!')
+
 
                 for cell in cell_location:
                     if self.location[0] == cell[0] and self.location[1] == cell[1]:
@@ -117,15 +121,9 @@ class Player:
             print("Too many wrong inputs. Next player to make " "action.")
             return
 
-
-
     def attack_player(self, target_player):
         target_player.health -= 1
         return f'{target_player.name} lost 1 health point. {target_player.health} health points left'
-
-
-
-
 
         # print(f'{player.name} was removed from game!')
         # print(f'len after={len(players_list)}')
